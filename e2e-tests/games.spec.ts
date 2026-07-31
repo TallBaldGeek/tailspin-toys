@@ -133,4 +133,93 @@ test.describe('Game Listing and Navigation', () => {
       await expect(page.getByTestId('not-found-home-link')).toBeVisible();
     });
   });
+
+  test('should filter games by category', async ({ page }) => {
+    let selectedCategoryId = '';
+
+    await test.step('Select a category and apply the filter', async () => {
+      await page.goto('/');
+      const firstGameCard = page.getByTestId('game-card').first();
+      await expect(firstGameCard).toBeVisible();
+
+      selectedCategoryId = (await firstGameCard.getAttribute('data-category-id')) ?? '';
+      expect(selectedCategoryId).not.toBe('');
+      const categoryCheckbox = page.locator(`input[name="category"][value="${selectedCategoryId}"]`);
+
+      await categoryCheckbox.check();
+      await page.getByTestId('apply-filters-button').click();
+    });
+
+    await test.step('Verify URL and filtered cards match the selected category', async () => {
+      await expect(page).toHaveURL(new RegExp(`category=${selectedCategoryId}`));
+      const visibleCards = page.locator('[data-testid="game-card"]:visible');
+      const visibleCount = await visibleCards.count();
+      expect(visibleCount).toBeGreaterThan(0);
+
+      for (let i = 0; i < visibleCount; i++) {
+        await expect(visibleCards.nth(i)).toHaveAttribute('data-category-id', selectedCategoryId);
+      }
+    });
+  });
+
+  test('should filter games by publisher', async ({ page }) => {
+    let selectedPublisherId = '';
+
+    await test.step('Select a publisher and apply the filter', async () => {
+      await page.goto('/');
+      const firstGameCard = page.getByTestId('game-card').first();
+      await expect(firstGameCard).toBeVisible();
+
+      selectedPublisherId = (await firstGameCard.getAttribute('data-publisher-id')) ?? '';
+      expect(selectedPublisherId).not.toBe('');
+      await page.getByTestId('publisher-filter').selectOption(selectedPublisherId);
+      await page.getByTestId('apply-filters-button').click();
+    });
+
+    await test.step('Verify URL and filtered cards match the selected publisher', async () => {
+      await expect(page).toHaveURL(new RegExp(`publisher=${selectedPublisherId}`));
+      const visibleCards = page.locator('[data-testid="game-card"]:visible');
+      const visibleCount = await visibleCards.count();
+      expect(visibleCount).toBeGreaterThan(0);
+
+      for (let i = 0; i < visibleCount; i++) {
+        await expect(visibleCards.nth(i)).toHaveAttribute('data-publisher-id', selectedPublisherId);
+      }
+    });
+  });
+
+  test('should combine category and publisher filters', async ({ page }) => {
+    let selectedCategoryId = '';
+    let selectedPublisherId = '';
+
+    await test.step('Apply category and publisher filters from an existing game card', async () => {
+      await page.goto('/');
+      const firstGameCard = page.getByTestId('game-card').first();
+      await expect(firstGameCard).toBeVisible();
+
+      selectedCategoryId = (await firstGameCard.getAttribute('data-category-id')) ?? '';
+      selectedPublisherId = (await firstGameCard.getAttribute('data-publisher-id')) ?? '';
+      expect(selectedCategoryId).not.toBe('');
+      expect(selectedPublisherId).not.toBe('');
+
+      await page.locator(`input[name="category"][value="${selectedCategoryId}"]`).check();
+      await page.getByTestId('publisher-filter').selectOption(selectedPublisherId);
+      await page.getByTestId('apply-filters-button').click();
+    });
+
+    await test.step('Verify visible cards match both filters and URL keeps both params', async () => {
+      await expect(page).toHaveURL(new RegExp(`category=${selectedCategoryId}`));
+      await expect(page).toHaveURL(new RegExp(`publisher=${selectedPublisherId}`));
+
+      const visibleCards = page.locator('[data-testid="game-card"]:visible');
+      const visibleCount = await visibleCards.count();
+      expect(visibleCount).toBeGreaterThan(0);
+
+      for (let i = 0; i < visibleCount; i++) {
+        const card = visibleCards.nth(i);
+        await expect(card).toHaveAttribute('data-category-id', selectedCategoryId);
+        await expect(card).toHaveAttribute('data-publisher-id', selectedPublisherId);
+      }
+    });
+  });
 });
