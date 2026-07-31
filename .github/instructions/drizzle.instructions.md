@@ -51,9 +51,30 @@ export async function getAllGameIds(db: Database): Promise<number[]> {
 }
 ```
 
+- Every exported function in `db/` and `src/lib/` must include a TSDoc/JSDoc block with:
+  - a one-line purpose statement
+  - `@param` entries for each parameter (including the injectable `db` parameter)
+  - an `@returns` description of the resolved return value
+- Keep comments focused on *why* and API contracts. Do not restate obvious implementation details.
+- Update or remove stale comments in the same change that modifies behavior.
+
 - Always `order by` a stable column (title) so static builds are deterministic.
 - Map raw rows to the app-facing `Game`/`Publisher`/`Category` types in one place; don't leak Drizzle row shapes into components.
 - Keep ordering/lookup logic in `games.ts`, not in pages.
+
+### Documentation Example
+
+```ts
+/**
+ * Returns all game IDs in stable title order for deterministic static path generation.
+ * @param db Drizzle database client injected by the caller (real client in pages, in-memory client in tests).
+ * @returns Promise resolving to game IDs sorted by title.
+ */
+export async function getAllGameIds(db: Database): Promise<number[]> {
+  const rows = await db.select({ id: games.id }).from(games).orderBy(asc(games.title));
+  return rows.map((row) => row.id);
+}
+```
 
 ## Determinism
 
@@ -66,4 +87,3 @@ Unit-test transforms directly and helpers against `createTestDatabase()`. See [`
 ## Type checking
 
 The data layer (`db/**/*.ts`, `src/lib/*.ts`) is type-checked by `npm run typecheck`, which runs the native **TypeScript 7** compiler (`tsgo`, from `@typescript/native-preview`) against `tsconfig.tsgo.json`. Keep helpers exported with explicit parameter and return types so `tsgo` can verify them. Linting is unaffected — ESLint + `typescript-eslint` still run on the classic `typescript` package.
-

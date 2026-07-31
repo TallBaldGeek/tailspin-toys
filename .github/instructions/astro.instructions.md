@@ -110,9 +110,30 @@ There is no Svelte/React layer. When a page genuinely needs client behaviour, ad
 
 - Use TypeScript for type-safe props
 - Define `Props` interface in frontmatter
+- For reusable components in `src/components/`, add a TSDoc/JSDoc block for the `Props` interface that explains the component contract and each prop's meaning
 - Type component imports and helper return values
 - Run `npx astro sync` to (re)generate route/content types before linting or type-checking
 - `.astro` files are type-checked by `npm run typecheck:astro` (which runs `astro sync` then `astro check`), on the classic `typescript` package. The pure TypeScript in `db/`, `src/lib/`, and `src/types/` is type-checked separately by `npm run typecheck` (the native TS 7 compiler, `tsgo`), which does **not** process `.astro` files.
+
+### Component Contract Documentation
+
+Use documentation comments on reusable component props so usage is self-explanatory:
+
+```astro
+---
+/**
+ * Props for the GameCard component.
+ * @property game Complete game model used to render card content and links.
+ * @property showPublisher Whether to render the publisher subtitle.
+ */
+interface Props {
+  game: Game;
+  showPublisher?: boolean;
+}
+---
+```
+
+When adding comments, explain intent and contract details, not obvious syntax.
 
 ## Best Practices
 
