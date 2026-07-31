@@ -20,6 +20,12 @@ Refer to technology-specific instruction files:
 
 ## Core Principles
 
+### Comment and Documentation Philosophy
+
+- Comment **intent and decisions**, not mechanics. Explain *why* code exists, tradeoffs, and non-obvious constraints.
+- Do not add comments that paraphrase obvious code (`// increment i` above `i += 1`).
+- Keep comments current when behavior changes; stale comments are bugs and must be updated or removed in the same change.
+
 ### Testability
 
 - Every interactive element MUST include a `data-testid` attribute
